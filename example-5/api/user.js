@@ -27,6 +27,17 @@ const auth = (req, res, next)=> {
         next()
     })
 }
+// users?page=3&limit=10
+router.get("users", async (req, res, next)=> {
+    const {page, limit} = req.query;
+    const skip = limit*(page - 1);
+    try{
+        const users = await User.find({}, {skip, limit});
+    }
+    catch(error){
+        next(error);
+    }
+})
 
 router.post('/registration', async (req, res, next) => {
     const { login, email, password } = req.body
@@ -72,9 +83,18 @@ router.post('/login', async (req, res, next) => {
         id: user._id
     };
     const {SECRET_KEY} = process.env;
+    // user.token = token;
+    // user.save();
+    // user.token = null;
+    // user.save()
 
+    // global.tokenList.push(token)
+    // const result = global.tokenList.find(token => userToken)
+
+    // Redis
+    // 
     const token = jwt.sign(payload, SECRET_KEY); // jwt.sign по умолчанию добавляет стандартный header вида {"alg": "HS256", "typ": "JWT"}
-
+    res.cookie("nToken", token);
     res.json({
         status: 'success',
         code: 200,
@@ -82,6 +102,10 @@ router.post('/login', async (req, res, next) => {
             token
         }
     })
+})
+
+router.post('/logout', (req, res, next)=>{
+    res.clearCookie("nToken")
 })
 
 router.get("/orders", auth, async (req, res, next)=> {
